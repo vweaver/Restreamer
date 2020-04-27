@@ -1,0 +1,3 @@
+p=$(pidof nginx)
+sudo kill $p
+

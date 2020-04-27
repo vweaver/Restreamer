@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<title>W3.CSS</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link href="https://vjs.zencdn.net/7.6.6/video-js.css" rel="stylesheet" />
+<style>
+    .center {
+        margin: auto;
+        padding: 10px;
+    }
+
+    .button {
+        background-color: #4CAF50;
+        /* Green */
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        width: 100%;
+    }
+</style>
+
+<body>
+    <div class="w3-container">
+        <h2>REstreamER</h2>
+        <p class="w3-large">Server Control Panel</p>
+    </div>
+
+    <div class="w3-row w3-border">
+
+        <div class="w3-container w3-half">
+            <div class="w3-container w3-center">
+                <h2>Live Stream</h2>
+                <video-js id="live_stream" class="vjs-default-skin center" controls autoplay preload="auto">
+                    <source src="http://192.168.1.102:8080/hls/test.m3u8" type="application/x-mpegURL">
+                </video-js>
+                <div class="w3-section">
+                    <h3>Server Control</h3>
+                    <div class="w3-bar">
+                        <button class="w3-bar-item w3-button w3-red">Stop</button>
+                        <button class="w3-bar-item w3-button w3-orange">Reload</button>
+                        <button class="w3-bar-item w3-button w3-green">Start</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="w3-container w3-half">
+            <h2 class="w3-center">Streaming Endpoints</h2>
+            {% for endpoint in endpoints %}
+            <div class="w3-card-4 w3-dark-grey">
+                <form class="w3-container" method="POST" action="./update_endpoint">
+                    <input type="hidden" value="{{endpoint.index}}" name="endpoint_index">
+
+                    <input class="w3-input w3-border w3-margin-top w3-margin-bottom" type="text" value="{{endpoint.name}}"
+                        name="endpoint_name">
+
+                    <input class="w3-input w3-border w3-margin-bottom" type="text" id="endpoint_url"
+                        value="{{endpoint.url}}" name="endpoint_url">
+
+                    <input class="w3-input w3-border w3-margin-bottom" type="text" id="endpoint_key"
+                        value="{{endpoint.key}}" name="endpoint_key">
+
+                    <div class="w3-container w3-center">
+                        <input type="submit" class="w3-button w3-orange w3-center" value="Update">
+                        <form method="POST" action="./delete_endpoint">
+                            <input type="hidden" value="{{endpoint.index}}" name="endpoint_index">
+                            <input type="submit" class="w3-button w3-red w3-center" value="Delete">
+                        </form>
+                    </div>
+
+                </form>
+            </div>
+            {% endfor %}
+
+            <button onclick="document.getElementById('id01').style.display='block'" class="button">Add New
+                Endpoint</button>
+        </div>
+
+    </div>
+
+    <div id="id01" class="w3-modal">
+        <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width:600px">
+
+            <div class="w3-center"><br>
+                <span onclick="document.getElementById('id01').style.display='none'"
+                    class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal">&times;</span>
+            </div>
+            <form class="w3-container" action="/action_page.php">
+                <div class="w3-section">
+                    <label><b>Label</b></label>
+                    <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter a label"
+                        name="label">
+                    <label><b>Stream URL</b></label>
+                    <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Stream URL" name="url"
+                        required>
+                    <label><b>Stream key</b></label>
+                    <input class="w3-input w3-border" type="text" placeholder="Stream key" name="key" required>
+                    <button class="w3-button w3-block w3-green w3-section w3-padding" type="submit">Add</button>
+                    <button onclick="document.getElementById('id01').style.display='none'" type="button"
+                        class="w3-button w3-block w3-red w3-section w3-padding">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://vjs.zencdn.net/7.6.6/video.js"></script>
+    <script src="videojs-http-streaming.min.js"></script>
+    <script>var player = videojs('live_stream');</script>
+    <script>
+        // Get the modal
+        var modal = document.getElementById('id01');
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+</body>
+
+</html>
