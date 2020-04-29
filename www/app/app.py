@@ -12,7 +12,7 @@ run_reload_nginx = """echo vagrant | sudo -S ./reload_nginx.sh """
 
 config_file = "/vagrant/config/nginx.conf"
 # config_file = "/home/mint/vagrant_streamer/home_network/config/nginx.conf"
-indent = "            "
+# indent = "            "
  
 
 class Endpoint:
