@@ -91,7 +91,7 @@ def delete_endpoint(config_file, index):
 @app.route('/')
 def index():
     print("rendering template")
-    return render_template('client.html', endpoints = read_endpoints(config_file))
+    return render_template('w3-client.html', endpoints = read_endpoints(config_file))
 
 @app.route('/add_endpoint', methods=["POST"])
 def create():
@@ -130,7 +130,6 @@ def update():
         endpoint.url = url
         endpoint.key = key
         update_endpoint(config_file, endpoint)
-
     except Exception as e:
         print("update function failed")
         print(e)
@@ -139,9 +138,8 @@ def update():
 @app.route('/delete_endpoint', methods=["POST"])
 def delete():
     try:
-        index = request.form.get("endpoint_index")
+        index = int(request.form.get("endpoint_index"))
         delete_endpoint(config_file, index)
-
     except Exception as e:
         print("delete_endpoint function failed")
         print(e)
@@ -150,20 +148,17 @@ def delete():
 @sio.on('ui_stop')
 def stop_server():
     print("Stopping Server")
-    p = subprocess.Popen(["sh", "-c", run_stop_nginx])
-    print(p)
+    subprocess.Popen(["sh", "-c", run_stop_nginx])
 
 @sio.on('ui_start')
 def start_server():
     print("Starting Server")
-    p = subprocess.Popen(["sh", "-c", run_start_nginx])
-    print(p)
+    subprocess.Popen(["sh", "-c", run_start_nginx])
 
 @sio.on('ui_reload')
 def reload_server():
     print("Reloading Server")
-    p = subprocess.Popen(["sh", "-c", run_reload_nginx])
-    print(p)
+    subprocess.Popen(["sh", "-c", run_reload_nginx])
 
 @sio.on('ui_trigger')
 def trigger():

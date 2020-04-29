@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<title>W3.CSS</title>
+<title>REstreamER</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <link href="https://vjs.zencdn.net/7.6.6/video-js.css" rel="stylesheet" />
@@ -27,13 +27,15 @@
 </style>
 
 <body>
+    <!-- Title Bar -->
     <div class="w3-container">
         <h2>REstreamER</h2>
         <p class="w3-large">Server Control Panel</p>
     </div>
 
+    <!-- Body -->
     <div class="w3-row w3-border">
-
+        <!-- Stream Viewer & Server Control -->
         <div class="w3-container w3-half">
             <div class="w3-container w3-center">
                 <h2>Live Stream</h2>
@@ -43,39 +45,39 @@
                 <div class="w3-section">
                     <h3>Server Control</h3>
                     <div class="w3-bar">
-                        <button class="w3-bar-item w3-button w3-red">Stop</button>
-                        <button class="w3-bar-item w3-button w3-orange">Reload</button>
-                        <button class="w3-bar-item w3-button w3-green">Start</button>
+                        <button class="w3-button w3-red" id="btn_stop">Stop</button>
+                        <button class="w3-button w3-orange" id="btn_reload">Reload</button>
+                        <button class="w3-button w3-green" id="btn_start">Start</button>
                     </div>
+                    <div id="response"></div>
                 </div>
             </div>
         </div>
-
+        <!-- Streaming Endpoints -->
         <div class="w3-container w3-half">
             <h2 class="w3-center">Streaming Endpoints</h2>
             {% for endpoint in endpoints %}
-            <div class="w3-card-4 w3-dark-grey">
-                <form class="w3-container" method="POST" action="./update_endpoint">
+            <div class="w3-card-4 w3-dark-grey w3-margin-bottom">
+                <form id="update-form-{{endpoint.index}}" class="w3-container" method="POST" action="./update_endpoint">
                     <input type="hidden" value="{{endpoint.index}}" name="endpoint_index">
 
-                    <input class="w3-input w3-border w3-margin-top w3-margin-bottom" type="text" value="{{endpoint.name}}"
-                        name="endpoint_name">
+                    <input class="w3-input w3-border w3-margin-top w3-margin-bottom" type="text"
+                        value="{{endpoint.name}}" name="endpoint_name">
 
                     <input class="w3-input w3-border w3-margin-bottom" type="text" id="endpoint_url"
                         value="{{endpoint.url}}" name="endpoint_url">
 
                     <input class="w3-input w3-border w3-margin-bottom" type="text" id="endpoint_key"
                         value="{{endpoint.key}}" name="endpoint_key">
+                    </form>
 
-                    <div class="w3-container w3-center">
-                        <input type="submit" class="w3-button w3-orange w3-center" value="Update">
-                        <form method="POST" action="./delete_endpoint">
-                            <input type="hidden" value="{{endpoint.index}}" name="endpoint_index">
-                            <input type="submit" class="w3-button w3-red w3-center" value="Delete">
-                        </form>
+                    <form id="delete-form-{{endpoint.index}}" method="POST" action="./delete_endpoint">
+                        <input type="hidden" value="{{endpoint.index}}" name="endpoint_index">
+                    </form>
+                    <div class="w3-bar w3-center">
+                        <input type="submit" form="update-form-{{endpoint.index}}" class="w3-button w3-orange w3-margin-right w3-margin-bottom" value="Update">
+                        <input type="submit" form="delete-form-{{endpoint.index}}" class="w3-button w3-red w3-margin-left w3-margin-bottom" value="Delete">
                     </div>
-
-                </form>
             </div>
             {% endfor %}
 
@@ -85,6 +87,7 @@
 
     </div>
 
+    <!-- New Endpoint Modal -->
     <div id="id01" class="w3-modal">
         <div class="w3-modal-content w3-card-4 w3-animate-zoom" style="max-width:600px">
 
@@ -92,16 +95,16 @@
                 <span onclick="document.getElementById('id01').style.display='none'"
                     class="w3-button w3-xlarge w3-hover-red w3-display-topright" title="Close Modal">&times;</span>
             </div>
-            <form class="w3-container" action="/action_page.php">
+            <form class="w3-container" method="POST" action="./add_endpoint">
                 <div class="w3-section">
                     <label><b>Label</b></label>
                     <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter a label"
-                        name="label">
+                        name="endpoint_name">
                     <label><b>Stream URL</b></label>
-                    <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Stream URL" name="url"
+                    <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Stream URL" name="endpoint_url"
                         required>
                     <label><b>Stream key</b></label>
-                    <input class="w3-input w3-border" type="text" placeholder="Stream key" name="key" required>
+                    <input class="w3-input w3-border" type="text" placeholder="Stream key" name="endpoint_key" required>
                     <button class="w3-button w3-block w3-green w3-section w3-padding" type="submit">Add</button>
                     <button onclick="document.getElementById('id01').style.display='none'" type="button"
                         class="w3-button w3-block w3-red w3-section w3-padding">Cancel</button>
@@ -109,10 +112,47 @@
             </form>
         </div>
     </div>
-
+    <!-- Video Player -->
     <script src="https://vjs.zencdn.net/7.6.6/video.js"></script>
     <script src="videojs-http-streaming.min.js"></script>
     <script>var player = videojs('live_stream');</script>
+
+    <!-- SocketIO -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"
+        integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+
+    <script type="text/javascript" charset="utf-8">
+        document.getElementById("btn_stop").addEventListener("click", btnStop);
+        document.getElementById("btn_start").addEventListener("click", btnStart);
+        document.getElementById("btn_reload").addEventListener("click", btnReload);
+
+        var socket = io();
+        socket.on('connect', function () {
+            document.getElementById("response").innerHTML = "SocketIO Connected!";
+        });
+
+        function btnStop() {
+            document.getElementById("response").innerHTML = "Stop Command Sent!";
+            socket.emit('ui_stop');
+        }
+
+        function btnStart() {
+            document.getElementById("response").innerHTML = "Start Command Sent!";
+            socket.emit('ui_start');
+        }
+
+        function btnReload() {
+            document.getElementById("response").innerHTML = "Reload Command Sent!";
+            socket.emit('ui_reload');
+        }
+
+        socket.on('frame', function (frame) {
+            document.getElementById("response").innerHTML = "Command Received ";
+        });
+
+    </script>
+
+    <!-- Close model on outside click -->
     <script>
         // Get the modal
         var modal = document.getElementById('id01');
