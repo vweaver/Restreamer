@@ -14,7 +14,7 @@ Vagrant.configure("2") do |config|
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "hashicorp/bionic64"
   config.vm.provision :shell, path: "bootstrap.sh" 
-  config.vm.provision :shell, path: "nginx_start.sh", run: 'always'
+  config.vm.provision :shell, path: "server_start.sh", run: 'always'
 
   # config.vm.network :forwarded_port, guest: 1935, host: 1935
 

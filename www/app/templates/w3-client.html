@@ -24,6 +24,31 @@
         cursor: pointer;
         width: 100%;
     }
+
+    /* The alert message box */
+    .alert {
+        padding: 5px;
+        background-color: #f44336;
+        color: white;
+
+    }
+
+    /* The close button */
+    .closebtn {
+        margin-left: 15px;
+        color: white;
+        font-weight: bold;
+        float: right;
+        font-size: 22px;
+        line-height: 20px;
+        cursor: pointer;
+        transition: 0.6s;
+    }
+
+    /* When moving the mouse over the close button */
+    .closebtn:hover {
+        color: black;
+    }
 </style>
 
 <body>
@@ -31,6 +56,13 @@
     <div class="w3-container">
         <h2>REstreamER</h2>
         <p class="w3-large">Server Control Panel</p>
+    </div>
+
+
+    <!-- Alert Message -->
+    <div id="alert-bar" class="alert">
+        <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
+        This is an alert box.
     </div>
 
     <!-- Body -->
@@ -70,15 +102,17 @@
 
                     <input class="w3-input w3-border w3-margin-bottom" type="text" id="endpoint_key"
                         value="{{endpoint.key}}" name="endpoint_key">
-                    </form>
+                </form>
 
-                    <form id="delete-form-{{endpoint.index}}" method="POST" action="./delete_endpoint">
-                        <input type="hidden" value="{{endpoint.index}}" name="endpoint_index">
-                    </form>
-                    <div class="w3-bar w3-center">
-                        <input type="submit" form="update-form-{{endpoint.index}}" class="w3-button w3-orange w3-margin-right w3-margin-bottom" value="Update">
-                        <input type="submit" form="delete-form-{{endpoint.index}}" class="w3-button w3-red w3-margin-left w3-margin-bottom" value="Delete">
-                    </div>
+                <form id="delete-form-{{endpoint.index}}" method="POST" action="./delete_endpoint">
+                    <input type="hidden" value="{{endpoint.index}}" name="endpoint_index">
+                </form>
+                <div class="w3-bar w3-center">
+                    <input type="submit" form="update-form-{{endpoint.index}}"
+                        class="w3-button w3-orange w3-margin-right w3-margin-bottom" value="Update">
+                    <input type="submit" form="delete-form-{{endpoint.index}}"
+                        class="w3-button w3-red w3-margin-left w3-margin-bottom" value="Delete">
+                </div>
             </div>
             {% endfor %}
 
@@ -102,8 +136,8 @@
                     <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Enter a label"
                         name="endpoint_name">
                     <label><b>Stream URL</b></label>
-                    <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Stream URL" name="endpoint_url"
-                        required>
+                    <input class="w3-input w3-border w3-margin-bottom" type="text" placeholder="Stream URL"
+                        name="endpoint_url" required>
                     <label><b>Stream key</b></label>
                     <input class="w3-input w3-border" type="text" placeholder="Stream key" name="endpoint_key" required>
                     <button class="w3-button w3-block w3-green w3-section w3-padding" type="submit">Add</button>
@@ -113,6 +147,7 @@
             </form>
         </div>
     </div>
+
     <!-- Video Player -->
     <script src="https://vjs.zencdn.net/7.6.6/video.js"></script>
     <script src="videojs-http-streaming.min.js"></script>
@@ -147,8 +182,16 @@
             socket.emit('ui_reload');
         }
 
-        socket.on('frame', function (frame) {
-            document.getElementById("response").innerHTML = "Command Received ";
+        socket.on('server_msg', function (server_msg) {
+            document.getElementById("alert-bar").innerHTML = server_msg.text;
+
+            if (server_msg.status === "true") { 
+                document.getElementById("alert-bar").style.backgroundColor = '#10753a';
+                document.getElementById("alert-bar").style.display = 'block';
+            } else {
+                document.getElementById("alert-bar").style.backgroundColor = '#f44336';
+                document.getElementById("alert-bar").style.display = 'block';
+            }
         });
 
     </script>

@@ -1,0 +1,3 @@
+nginx: [alert] could not open error log file: open() "/usr/local/nginx/logs/error.log" failed (13: Permission denied)
+2020/05/02 20:29:46 [emerg] 1688#0: host not found in url "will/fail" in /usr/local/nginx/conf/nginx.conf:27
+nginx: configuration file /usr/local/nginx/conf/nginx.conf test failed

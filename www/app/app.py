@@ -88,6 +88,64 @@ def delete_endpoint(config_file, index):
     with open(config_file, 'w') as file:
         file.writelines(data)
 
+# untested
+def backup_config_file(config_file='/usr/local/nginx/conf', backup_file='/usr/local/nginx/conf.bak'):
+    '''Copies config_file to backup_file'''
+    print('backing up config file')
+    subprocess.run(['sudo', 'cp', config_file, backup_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+# untested
+def revert_config_file(config_file='/usr/local/nginx/conf', backup_file='/usr/local/nginx/conf.bak'):
+    '''Copies backup_file to config_file'''
+    print('reverting up config file')
+    subprocess.run(['sudo', 'cp', backup_file, config_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+# untested
+def copy_config_file(source='/vagrant/config/nginx.conf', dest='/usr/local/nginx/conf'):
+    '''Copies file from source to destination'''
+    print("copying config file")
+    try:
+        subprocess.run(['sudo', 'cp', '/vagrant/config/nginx.conf', '/usr/local/nginx/conf'], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    except Exception as e:
+        print(e)
+
+#untested
+def test_config_file():
+    '''Tests the current config file with nginx, returns True if successful, False otherwise'''
+    try:
+        output = subprocess.run(('sudo /usr/local/nginx/sbin/nginx -t'), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode('utf-8')
+        if "test is successful" in output:
+            print("TEST PASSED")
+            return True
+        else:
+            print("TEST FAILED") 
+            return False
+    except Exception as e:
+        print(e)
+        return False
+
+# untested
+def activate_config_file():
+    print("activating config file")
+    '''Activates the current config file with nginx'''
+    try:
+        output = subprocess.run(('sudo /usr/local/nginx/sbin/nginx -s' 'reload'), shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT).stdout.decode('utf-8')
+        print(output)
+    except Exception as e:
+        print(e)
+
+#untested
+def try_new_config_file():
+    backup_config_file()
+    copy_config_file()
+
+    if test_config_file():
+        activate_config_file()
+        sio.emit('server_msg', {'status': 'true', 'text': "Endpoints Updated"}, broadcast=True)
+    else:
+        revert_config_file()
+        sio.emit('server_msg', {'status': 'false', 'text': "Invalid Endpoint. Check and try again"}, broadcast=True)
+
 @app.route('/')
 def index():
     print("rendering template")
@@ -105,6 +163,7 @@ def create():
         endpoint.url = url
         endpoint.key = key
         create_endpoint(config_file, endpoint)
+        try_new_config_file()
 
     except Exception as e:
         print("add_endpoint function failed")
@@ -130,6 +189,7 @@ def update():
         endpoint.url = url
         endpoint.key = key
         update_endpoint(config_file, endpoint)
+        try_new_config_file()
     except Exception as e:
         print("update function failed")
         print(e)
@@ -140,6 +200,7 @@ def delete():
     try:
         index = int(request.form.get("endpoint_index"))
         delete_endpoint(config_file, index)
+        try_new_config_file()
     except Exception as e:
         print("delete_endpoint function failed")
         print(e)
@@ -157,8 +218,8 @@ def start_server():
 
 @sio.on('ui_reload')
 def reload_server():
-    print("Reloading Server")
-    subprocess.Popen(["sh", "-c", run_reload_nginx])
+    try_new_config_file()
+
 
 @sio.on('ui_trigger')
 def trigger():
