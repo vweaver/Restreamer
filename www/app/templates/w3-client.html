@@ -28,9 +28,9 @@
     /* The alert message box */
     .alert {
         padding: 5px;
-        background-color: #f44336;
+        /* background-color: #f44336; */
+        /* Red */
         color: white;
-
     }
 
     /* The close button */
@@ -42,7 +42,7 @@
         font-size: 22px;
         line-height: 20px;
         cursor: pointer;
-        transition: 0.6s;
+        transition: 0.3s;
     }
 
     /* When moving the mouse over the close button */
@@ -59,11 +59,13 @@
     </div>
 
 
-    <!-- Alert Message -->
-    <div id="alert-bar" class="alert">
+    <!-- Flash Message -->
+    {% for msg in messages %}
+    <div class="{{ msg.msg_class }}">
         <span class="closebtn" onclick="this.parentElement.style.display='none';">&times;</span>
-        This is an alert box.
+        {{ msg.text }}
     </div>
+    {% endfor %}
 
     <!-- Body -->
     <div class="w3-row w3-border">
@@ -79,7 +81,7 @@
                     <h3>Server Control</h3>
                     <div class="w3-bar">
                         <button class="w3-button w3-red" id="btn_stop">Stop</button>
-                        <button class="w3-button w3-orange" id="btn_reload">Reload</button>
+                        <!-- <button class="w3-button w3-orange" id="btn_reload">Reload</button> -->
                         <button class="w3-button w3-green" id="btn_start">Start</button>
                     </div>
                     <div id="response"></div>
@@ -160,7 +162,7 @@
     <script type="text/javascript" charset="utf-8">
         document.getElementById("btn_stop").addEventListener("click", btnStop);
         document.getElementById("btn_start").addEventListener("click", btnStart);
-        document.getElementById("btn_reload").addEventListener("click", btnReload);
+        // document.getElementById("btn_reload").addEventListener("click", btnReload);
 
         var socket = io();
         socket.on('connect', function () {
@@ -177,15 +179,11 @@
             socket.emit('ui_start');
         }
 
-        function btnReload() {
-            document.getElementById("response").innerHTML = "Reload Command Sent!";
-            socket.emit('ui_reload');
-        }
-
+ 
         socket.on('server_msg', function (server_msg) {
-            document.getElementById("alert-bar").innerHTML = server_msg.text;
+            document.getElementById("response").innerHTML = server_msg.text;
 
-            if (server_msg.status === "true") { 
+            if (server_msg.status === "true") {
                 document.getElementById("alert-bar").style.backgroundColor = '#10753a';
                 document.getElementById("alert-bar").style.display = 'block';
             } else {

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, flash, render_template, request, redirect
 from flask_socketio import SocketIO, emit 
 import subprocess
 
@@ -12,8 +12,26 @@ run_reload_nginx = """echo vagrant | sudo -S ./reload_nginx.sh """
 
 config_file = "/vagrant/config/nginx.conf"
 # config_file = "/home/mint/vagrant_streamer/home_network/config/nginx.conf"
-# indent = "            "
- 
+
+
+class Message:
+    def __init__(self, text, msg_class):
+        self.text = text
+        self.msg_class = msg_class
+
+class Messages:
+    def __init__(self):
+        self.msg_list = []
+
+    def add(self, msg):
+        self.msg_list.append(msg)
+
+    def get(self):
+        msgs = self.msg_list
+        self.msg_list = []
+        return msgs
+
+messages = Messages()
 
 class Endpoint:
     def __init__(self, index):
@@ -88,19 +106,16 @@ def delete_endpoint(config_file, index):
     with open(config_file, 'w') as file:
         file.writelines(data)
 
-# untested
 def backup_config_file(config_file='/usr/local/nginx/conf', backup_file='/usr/local/nginx/conf.bak'):
     '''Copies config_file to backup_file'''
     print('backing up config file')
     subprocess.run(['sudo', 'cp', config_file, backup_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-# untested
 def revert_config_file(config_file='/usr/local/nginx/conf', backup_file='/usr/local/nginx/conf.bak'):
     '''Copies backup_file to config_file'''
     print('reverting up config file')
     subprocess.run(['sudo', 'cp', backup_file, config_file], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-# untested
 def copy_config_file(source='/vagrant/config/nginx.conf', dest='/usr/local/nginx/conf'):
     '''Copies file from source to destination'''
     print("copying config file")
@@ -109,7 +124,6 @@ def copy_config_file(source='/vagrant/config/nginx.conf', dest='/usr/local/nginx
     except Exception as e:
         print(e)
 
-#untested
 def test_config_file():
     '''Tests the current config file with nginx, returns True if successful, False otherwise'''
     try:
@@ -124,7 +138,6 @@ def test_config_file():
         print(e)
         return False
 
-# untested
 def activate_config_file():
     print("activating config file")
     '''Activates the current config file with nginx'''
@@ -134,22 +147,23 @@ def activate_config_file():
     except Exception as e:
         print(e)
 
-#untested
 def try_new_config_file():
     backup_config_file()
     copy_config_file()
 
     if test_config_file():
         activate_config_file()
-        sio.emit('server_msg', {'status': 'true', 'text': "Endpoints Updated"}, broadcast=True)
+        msg = Message("Endpoints Updated", "alert w3-green")
+        messages.add(msg)
     else:
         revert_config_file()
-        sio.emit('server_msg', {'status': 'false', 'text': "Invalid Endpoint. Check and try again"}, broadcast=True)
+        msg = Message("Invalid Endpoint. Check and try again", "alert w3-red")
+        messages.add(msg)
 
 @app.route('/')
 def index():
     print("rendering template")
-    return render_template('w3-client.html', endpoints = read_endpoints(config_file))
+    return render_template('w3-client.html', endpoints = read_endpoints(config_file), messages=messages.get())
 
 @app.route('/add_endpoint', methods=["POST"])
 def create():
@@ -209,17 +223,14 @@ def delete():
 @sio.on('ui_stop')
 def stop_server():
     print("Stopping Server")
+    sio.emit('server_msg', {'text': "Stopping Server"}, broadcast=True)
     subprocess.Popen(["sh", "-c", run_stop_nginx])
 
 @sio.on('ui_start')
 def start_server():
     print("Starting Server")
+    sio.emit('server_msg', {'text': "Starting Server"}, broadcast=True)
     subprocess.Popen(["sh", "-c", run_start_nginx])
-
-@sio.on('ui_reload')
-def reload_server():
-    try_new_config_file()
-
 
 @sio.on('ui_trigger')
 def trigger():
