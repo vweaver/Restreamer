@@ -75,7 +75,8 @@
                 <h2>Live Stream</h2>
                 <!-- style="width:100%; max-width: 400px; max-height: 200px;" -->
                 <video-js id="live_stream" class="vjs-default-skin center" controls autoplay preload="auto">
-                    <source src="http://192.168.1.102:8080/hls/test.m3u8" type="application/x-mpegURL">
+                    <!-- <source src="http://192.168.1.102:8080/hls/test.m3u8" type="application/x-mpegURL"> -->
+                    <source src="http://{{ ip_address }}:8080/hls/test.m3u8" type="application/x-mpegURL">
                 </video-js>
                 <div class="w3-section">
                     <h3>Server Control</h3>

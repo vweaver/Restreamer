@@ -9,7 +9,7 @@ systemctl restart stunnel4
 
 # Flask
 cd /vagrant/www/app/
-# gunicorn -b 0.0.0.0:8000 -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 app:app &
+gunicorn -b 0.0.0.0:8000 -k geventwebsocket.gunicorn.workers.GeventWebSocketWorker -w 1 app:app &
 
 # nginx
 cp /vagrant/config/nginx.conf /usr/local/nginx/conf

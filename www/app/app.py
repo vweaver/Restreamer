@@ -1,6 +1,7 @@
 from flask import Flask, flash, render_template, request, redirect
 from flask_socketio import SocketIO, emit 
 import subprocess
+import re
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'
@@ -11,13 +12,14 @@ run_start_nginx = """echo vagrant | sudo -S ./start_nginx.sh """
 run_reload_nginx = """echo vagrant | sudo -S ./reload_nginx.sh """
 
 config_file = "/vagrant/config/nginx.conf"
-# config_file = "/home/mint/vagrant_streamer/home_network/config/nginx.conf"
+ip_pattern = re.compile( "(\d+.\d+.\d+.\d+)" )
 
 
 class Message:
     def __init__(self, text, msg_class):
         self.text = text
         self.msg_class = msg_class
+
 
 class Messages:
     def __init__(self):
@@ -31,12 +33,11 @@ class Messages:
         self.msg_list = []
         return msgs
 
-messages = Messages()
 
 class Endpoint:
     def __init__(self, index):
         self.index = index
-        self.indent = "            " 
+        self.indent = "            "
         self.name = ""
         self.url = ""
         self.key = ""
@@ -46,6 +47,45 @@ class Endpoint:
 
     def get_line(self):
         return f"{self.indent}push {self.url}/{self.key};\n"
+
+def get_ip_address(filepath):
+    ip_address = None
+    
+    with open("/vagrant/Vagrantfile", "r") as f:
+        for line in f:
+            # discard comments
+            if "#" in line:
+                line = line.split("#")[0]
+
+            if "config.vm.network" in line:
+                ip_address = ip_pattern.search(line).group()
+                break
+    return ip_address
+
+def update_index_ip(index_file, new_ip):
+    with open(index_file, "r") as file:
+        data = file.readlines()
+
+    comment = False
+    for i, line in enumerate(data):
+        # discard comments
+        if "<!--" in line:
+            comment = True  
+        if comment:
+            if "-->" in line:
+                comment = False
+                line = line.rsplit("-->")[1]
+            else:
+                continue
+
+        # update the ip address
+        if not comment and "application/x-mpegURL" in line:
+            ip = ip_pattern.search(line).group()
+            data[i] = line.replace(ip, new_ip)
+            break
+
+    with open(index_file, 'w') as file:
+            file.writelines(data)
 
 def create_endpoint(comment, endpoint):
     with open(config_file, 'r') as file:
@@ -163,7 +203,7 @@ def try_new_config_file():
 @app.route('/')
 def index():
     print("rendering template")
-    return render_template('w3-client.html', endpoints = read_endpoints(config_file), messages=messages.get())
+    return render_template('w3-client.html', endpoints = read_endpoints(config_file), messages=messages.get(), ip_address=ip_address)
 
 @app.route('/add_endpoint', methods=["POST"])
 def create():
@@ -237,6 +277,11 @@ def trigger():
     print("trigger received")
     sio.emit('frame', {'count': 1}, broadcast=True)
 
+# update the ip address in the webpage from the Vagrantfile
+ip_address = get_ip_address("/vagrant/Vagrantfile")
+update_index_ip("/vagrant/www/index.html", ip_address)
+
+messages = Messages()
 
 if __name__ == "__main__":
     print("Starting Flask")

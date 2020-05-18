@@ -23,16 +23,15 @@
 <body>
     <main>
         <video-js id="live_stream" class="vjs-default-skin" controls autoplay preload="auto">
-          <source src="http://192.168.1.102:8080/hls/test.m3u8" type="application/x-mpegURL">
+          <!-- <source src="http://192.168.1.102:8080/hls/test.m3u8" type="application/x-mpegURL"> -->
+          <source src="http://192.168.1.234:8080/hls/test.m3u8" type="application/x-mpegURL">
         </video-js>
        
         <script src="https://vjs.zencdn.net/7.6.6/video.js"></script>
         <script src="videojs-http-streaming.min.js"></script>
        
-        
-        <script>
-          var player = videojs('live_stream');
-        </script>
+        <script> var player = videojs('live_stream', { fluid: true });</script>
+  
     </main>
 </body>
 </html>
